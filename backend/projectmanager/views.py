@@ -4,11 +4,38 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
 from .models import Project
-from .serializers import ProjectSerializer
+from .serializers import ProjectSerializer, UserSerializer
 
 from django.contrib.auth.models import User
 
 from django.shortcuts import get_object_or_404
+
+from rest_framework.authtoken.models import Token
+# new
+
+"""
+For clients to authenticate, the token key should be
+included in the Authorization HTTP header. The key should
+be prefixed by the string literal "Token", with whitespace
+separating the two strings. For example:
+
+Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+
+
+If successfully authenticated, TokenAuthentication provides
+the following credentials.
+
+request.user will be a Django User instance.
+request.auth will be a rest_framework.authtoken.models.Token instance.
+"""
+
+# EXAMPLE CODE
+    #    token = Token.objects.create(user=User.objects.get(pk=1))
+
+class UserViewSet(ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
 
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
