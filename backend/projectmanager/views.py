@@ -84,7 +84,7 @@ class ProjectViewSet(ModelViewSet):
                 if serializer.data.get('description'):
                     project.description = serializer.validated_data['description']
 
-                if serializer.data.get('images'):
+                if serializer.validated_data.get('images'):
                     project.images = serializer.validated_data['images']
 
                 project.save()

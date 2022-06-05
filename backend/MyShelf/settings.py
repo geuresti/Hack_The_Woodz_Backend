@@ -21,6 +21,8 @@ REST_FRAMEWORK = {
         #'rest_framework.permissions.IsAuthenticated'
 }
 
+#AUTH_USER_MODEL = 'projectmanager.CustomerUser'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
