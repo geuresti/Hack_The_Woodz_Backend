@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 
 from .models import Project
 from .serializers import ProjectSerializer, UserSerializer
@@ -11,32 +11,49 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework.authtoken.models import Token
-# new
+from rest_framework.permissions import IsAuthenticated
 
-"""
-For clients to authenticate, the token key should be
-included in the Authorization HTTP header. The key should
-be prefixed by the string literal "Token", with whitespace
-separating the two strings. For example:
-
-Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
-
-
-If successfully authenticated, TokenAuthentication provides
-the following credentials.
-
-request.user will be a Django User instance.
-request.auth will be a rest_framework.authtoken.models.Token instance.
-"""
-
-# EXAMPLE CODE
-    #    token = Token.objects.create(user=User.objects.get(pk=1))
 
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
+    @action(detail=False, methods=['get'])
+    def users(self, request):
+        users = User.objects.all()
 
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def create_account(self, request):
+        serializer = UserSerializer(data=request.data)
+
+        # this line is required before acessing serialized data
+        if serializer.is_valid():
+
+            # this validation system feels inefficient
+            req_username = serializer.validated_data.get('username')
+            req_email = serializer.validated_data.get('email')
+            req_password = serializer.validated_data.get('password')
+
+            if req_username and req_email and req_password:
+                username = serializer.validated_data['username']
+                email = serializer.validated_data['email']
+                password = serializer.validated_data['password']
+
+                user = User.objects.create_user(username, email, password)
+                user.save()
+                return Response({"status":"user successfully created"}, status=status.HTTP_200_OK)
+
+        return Response({"status":"required fields missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# request will only be allowed if the person making it
+# is authenticated. authentication is confirmed by putting
+# "Authorization : Token <insert token>" as the header for
+# the request
+@permission_classes([IsAuthenticated])
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -62,10 +79,10 @@ class ProjectViewSet(ModelViewSet):
                 already_exists = Project.objects.filter(title=title_data)
                 # UNCOMMENT THIS ONCE DONE TESTING WITH POSTMAN
                 if already_exists: # and (already_exists.user == request.user):
-                    return Response({"error":"project with that title already exists"})
+                    return Response({"error":"project with that title already exists"}, status=status.HTTP_409_CONFLICT)
 
             else:
-                return Response({"error":"project not found"})
+                return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
 
             req_has_title = serializer.validated_data.get('title')
             req_has_tools = serializer.validated_data.get('tools')
@@ -81,7 +98,7 @@ class ProjectViewSet(ModelViewSet):
                 project.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                return Response({"error":"required fields missing"})
+                return Response({"error":"required fields missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -96,12 +113,14 @@ class ProjectViewSet(ModelViewSet):
                 title_data = serializer.validated_data['title']
                 project = get_object_or_404(Project, title=title_data)
             else:
-                return Response({"error":"project not found"})
+                # if it's new then why would it be found?
+                return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
 
-            #id is not passed in serializer due to being read only
+            #id is not passed in serializer due to being "read only"
             #project_id = (serializer.validated_data['id'])
 
         # UNCOMMENT THIS ONCE DONE TESTING WITH POSTMAN
+        # header token == request.user.token*
             if project.user: # == request.user:
 
                 # update anything that's changed been changed in request body
@@ -127,6 +146,6 @@ class ProjectViewSet(ModelViewSet):
             project = get_object_or_404(Project, title=title_data)
             img = "/media/" + str(project.images)
 
-            return Response({"images":img})
+            return Response({"images":img}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -9,5 +9,7 @@ urlpatterns = [
     path('update/', ProjectViewSet.as_view({'post':'update'})),
     path('get_image/', ProjectViewSet.as_view({'get':'get_image'})),
     path('auth_token/', views.obtain_auth_token, name='auth_token'),
+    path('users/', UserViewSet.as_view({'get':'users'})),
+    path('create_account/', UserViewSet.as_view({'post':'create_account'}))
     #path('log_in/', UserViewSet.as_view({'get':'log_in'})),
 ]
