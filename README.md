@@ -2,6 +2,7 @@
 
 ## To run this project:
 Install latest version of python
+
 Open your terminal and type: "python -m venv /path/to/new/virtual/environment"
 
 Go to the Scripts directory inside the environment you just created and run "activate.bat" 
