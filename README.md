@@ -15,7 +15,7 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000/projectmanager/ in your web browser and you will see a list of endpoints to interact with
 
-## All the available endpoints for testing
+## All the available endpoints for testing:
 
 ### `projects/`
 View projects
