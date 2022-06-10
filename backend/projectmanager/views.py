@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
 
 class UserViewSet(ModelViewSet):
@@ -25,6 +25,11 @@ class UserViewSet(ModelViewSet):
 
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], permission_classes=[IsAuthenticated])
+    def log_out(self, request):
+        request.user.auth_token.delete()
+        return Response({"status":"sucessfully logged out"}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def create_account(self, request):
@@ -60,7 +65,7 @@ class UserViewSet(ModelViewSet):
         user = get_object_or_404(User, username=username)
 
         projects = Project.objects.filter(user=user)
-        
+
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -78,7 +83,6 @@ class ProjectViewSet(ModelViewSet):
     serializer_class = ProjectSerializer
 
     # display all projects in database (for testing)
-#    @permission_classes([AllowAny])
     @action(detail=False, methods=['get'])
     def projects(self, request):
         projects = Project.objects.all()
