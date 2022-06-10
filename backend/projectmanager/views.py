@@ -14,6 +14,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
 
+# add "short_description"
+
+# remove "images" from URLS and change to thumbnail
+# check other urls
+
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
@@ -66,8 +71,23 @@ class UserViewSet(ModelViewSet):
 
         projects = Project.objects.filter(user=user)
 
-        serializer = ProjectSerializer(projects, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        display = []
+
+        for project in projects:
+            project_info = {
+                "id": project.id,
+                "thumbnail": str(project.thumbnail),
+                "title": project.title,
+                "short_description": project.short_description
+            }
+
+            display.append(project_info)
+
+        return Response(display, status=status.HTTP_200_OK)
+
+# This returns all fields for each project
+    #    serializer = ProjectSerializer(projects, many=True)
+    #    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # unathenticated users may only perform GET requests
@@ -101,8 +121,16 @@ class ProjectViewSet(ModelViewSet):
                 title_data = serializer.validated_data['title']
                 project = get_object_or_404(Project, title=title_data)
 
-                display = ProjectSerializer(project)
-                return Response(display.data, status=status.HTTP_200_OK)
+                display = {
+                    "long_description": project.long_description,
+                    "contributions": project.contributions
+                }
+
+                return Response(display, status=status.HTTP_200_OK)
+
+                # This will display all fields of the project
+                #display = ProjectSerializer(project)
+                #return Response(display.data, status=status.HTTP_200_OK)
             else:
                 return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -127,21 +155,23 @@ class ProjectViewSet(ModelViewSet):
                     return Response({"error":"project with that title already exists"}, status=status.HTTP_409_CONFLICT)
 
             # confirm that the request has the following fields
-            req_has_title = serializer.validated_data.get('title')
-            req_has_tools = serializer.validated_data.get('tools')
-            req_has_desc = serializer.validated_data.get('description')
-            req_has_image = serializer.validated_data.get('images')
+            req_title = serializer.validated_data.get('title')
+            req_contributions = serializer.validated_data.get('contributions')
+            req_long_desc = serializer.validated_data.get('long_description')
+            req_short_desc = serializer.validated_data.get('short_description')
+            req_thumbnail = serializer.validated_data.get('thumbnail')
 
             # if the request had all four fields filled out, create
             # the new project using the data from the request
-            if req_has_title and req_has_tools and req_has_desc and req_has_image:
+            if req_title and req_contributions and req_long_desc and req_short_desc and req_thumbnail:
                 project.title = serializer.validated_data['title']
-                project.tools = serializer.validated_data['tools']
-                project.description = serializer.validated_data['description']
-                project.images = serializer.validated_data['images']
+                project.contributions = serializer.validated_data['contributions']
+                project.long_description = serializer.validated_data['long_description']
+                project.short_description = serializer.validated_data['short_description']
+                project.thumbnail = serializer.validated_data['thumbnail']
 
                 project.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response({"status":"successfully created project"}, status=status.HTTP_201_CREATED)
             else:
                 return Response({"error":"required fields missing"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -170,14 +200,17 @@ class ProjectViewSet(ModelViewSet):
             if project.user == request.user:
 
                 # update anything that's changed been changed in request body
-                if serializer.data.get('tools'):
-                    project.tools = serializer.validated_data['tools']
+                if serializer.data.get('contributions'):
+                    project.contributions = serializer.validated_data['contributions']
 
-                if serializer.data.get('description'):
-                    project.description = serializer.validated_data['description']
+                if serializer.data.get('long_description'):
+                    project.long_description = serializer.validated_data['long_description']
 
-                if serializer.validated_data.get('images'):
-                    project.images = serializer.validated_data['images']
+                if serializer.data.get('short_description'):
+                    project.short_description = serializer.validated_data['short_description']
+
+                if serializer.validated_data.get('thumbnail'):
+                    project.thumbnail = serializer.validated_data['thumbnail']
 
                 project.save()
                 return Response({"status":"sucessfully updated project"}, status=status.HTTP_202_ACCEPTED)
@@ -198,20 +231,20 @@ class ProjectViewSet(ModelViewSet):
                     project.delete()
                     return Response({"status":"project successfully deleted"}, status=status.HTTP_200_OK)
                 else:
-                    return Response({"error":"you don't have permission"}, status=status.HTTP_401_UNAUTHORIZED)
+                    return Response({"error":"you don't have permission to delete this project"}, status=status.HTTP_401_UNAUTHORIZED)
             else:
                 return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
-    def get_image(self, request, *args, **kwargs):
+    def get_thumbnail(self, request, *args, **kwargs):
         serializer = ProjectSerializer(data=request.data, partial=True)
         if serializer.is_valid():
             title_data = (serializer.validated_data['title'])
             project = get_object_or_404(Project, title=title_data)
-            img = "/media/" + str(project.images)
+            img = "/media/" + str(project.thumbnail)
 
-            return Response({"images":img}, status=status.HTTP_200_OK)
+            return Response({"thumbnail":img}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
