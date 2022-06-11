@@ -35,6 +35,9 @@ To get a image for display in the project
 ### `log_in/`
 The endpoint for the user login page
 
+### `log_out/`
+The endpoint for the user when they hit logout button
+
 ### `users/`
 To get the a specific user's profile or the list of users' profile
 
