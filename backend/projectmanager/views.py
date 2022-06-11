@@ -7,6 +7,7 @@ from .models import Project
 from .serializers import ProjectSerializer, UserSerializer
 
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import get_object_or_404
 
@@ -45,19 +46,21 @@ class UserViewSet(ModelViewSet):
 
             # this validation system feels inefficient
             # skim thru request data and make sure it has
-            # a username, email, and password field
+            # a username, email, job title, and password field
             req_username = serializer.validated_data.get('username')
             req_email = serializer.validated_data.get('email')
             req_password = serializer.validated_data.get('password')
+            req_job_title = serializer.validated_data.get('job_title')
 
             # check that these fields are not None
-            if req_username and req_email and req_password:
+            if req_username and req_email and req_password and req_job_title:
                 username = serializer.validated_data['username']
                 email = serializer.validated_data['email']
                 password = serializer.validated_data['password']
+                job_title = serializer.validated_data['job_title']
 
                 # creaate and save new user
-                user = User.objects.create_user(username, email, password)
+                user = User.objects.create_user(username, email, password, job_title)
                 user.save()
                 return Response({"status":"user successfully created"}, status=status.HTTP_200_OK)
 
