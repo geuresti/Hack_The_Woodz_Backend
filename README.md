@@ -32,6 +32,9 @@ To view a specific project
 ### `get_image/`
 To get a image for display in the project
 
+### `get_thumbnail/`
+To get the thumbnail
+
 ### `log_in/`
 The endpoint for the user login page
 
