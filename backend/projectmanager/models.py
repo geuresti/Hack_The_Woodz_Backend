@@ -15,3 +15,11 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+# to extend the User model by adding job_title field
+class Person(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    job_title = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.first_name
