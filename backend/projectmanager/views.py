@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404
 # when a user logs in. By default, only the token is returned
 class CustomAuthToken(ObtainAuthToken):
 
-    # This function allows us to include first_name, job_title 
+    # This function allows us to include first_name, job_title
     # in the Response when a user logs into their account
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -87,6 +87,7 @@ class UserViewSet(ModelViewSet):
             req_username = serializer.validated_data.get('username')
             req_email = serializer.validated_data.get('email')
             req_password = serializer.validated_data.get('password')
+            req_job_title = serializer.validated_data.get('job_title')
 
             # check that these fields are not None
             if req_first_name and req_username and req_email and req_password:
@@ -96,6 +97,7 @@ class UserViewSet(ModelViewSet):
                 username = serializer.validated_data['username']
                 email = serializer.validated_data['email']
                 password = serializer.validated_data['password']
+                job_title = serializer.validated_data['job_title']
 
                 user = User.objects.create_user(
                         first_name=first_name,
