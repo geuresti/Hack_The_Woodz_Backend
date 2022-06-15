@@ -118,24 +118,32 @@ class UserViewSet(ModelViewSet):
     # display all projects by a specific user (username: <username>)
     @action(detail=False, methods=['get'])
     def profile(self, request):
-        username = request.data['username']
-        user = get_object_or_404(User, username=username)
+        parameters = request.GET
+        num_parameters = len(request.GET)
 
-        projects = Project.objects.filter(user=user)
+        if num_parameters != 1:
+            return Response({"status":"incorrect number of arguments"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            try:
+                username = parameters['username']
+                user = get_object_or_404(User, username=username)
+                projects = Project.objects.filter(user=user)
 
-        display = []
+                display = []
 
-        for project in projects:
-            project_info = {
-                "id": project.id,
-                "thumbnail": str(project.thumbnail),
-                "title": project.title,
-                "short_description": project.short_description
-            }
+                for project in projects:
+                    project_info = {
+                        "id": project.id,
+                        "thumbnail": str(project.thumbnail),
+                        "title": project.title,
+                        "short_description": project.short_description
+                    }
 
-            display.append(project_info)
+                    display.append(project_info)
 
-        return Response(display, status=status.HTTP_200_OK)
+                return Response(display, status=status.HTTP_200_OK)
+            except:
+                return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # unathenticated users may only perform GET requests
@@ -162,28 +170,26 @@ class ProjectViewSet(ModelViewSet):
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # view a specific project (title: <project title>)
+# Example Request:
+# http://127.0.0.1:8000/projectmanager/params/?title=Abby's First Project
     @action(detail=False, methods=['get'])
     def view_project(self, request):
-        serializer = ProjectSerializer(data=request.data, partial=True)
+        parameters = request.GET
+        num_parameters = len(request.GET)
 
-        if serializer.is_valid():
-            # look for project by title
-            if serializer.initial_data.get('title'):
-                title_data = serializer.validated_data['title']
-                project = get_object_or_404(Project, title=title_data)
-
+        if num_parameters != 1:
+            return Response({"status":"incorrect number of arguments"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            try:
+                title = parameters['title']
+                project = get_object_or_404(Project, title=title)
                 display = {
                     "long_description": project.long_description,
                     "contributions": project.contributions
                 }
-
                 return Response(display, status=status.HTTP_200_OK)
-            else:
-                return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            except:
+                return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
     # create a new project
     @action(detail=True, methods=['post'])
@@ -224,7 +230,6 @@ class ProjectViewSet(ModelViewSet):
                 return Response({"error":"required fields missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
     # update field(s) for a project
     @action(detail=False, methods=['patch'])
@@ -281,13 +286,18 @@ class ProjectViewSet(ModelViewSet):
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
-    def get_thumbnail(self, request, *args, **kwargs):
-        serializer = ProjectSerializer(data=request.data, partial=True)
-        if serializer.is_valid():
-            title_data = (serializer.validated_data['title'])
-            project = get_object_or_404(Project, title=title_data)
-            img = "/media/" + str(project.thumbnail)
+    def get_thumbnail(self, request):
+        parameters = request.GET
+        num_parameters = len(request.GET)
 
-            return Response({"thumbnail":img}, status=status.HTTP_200_OK)
+        if num_parameters != 1:
+            return Response({"status":"incorrect number of arguments"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                title = parameters['title']
+                project = get_object_or_404(Project, title=title)
+                img = "/media/" + str(project.thumbnail)
+
+                return Response({"thumbnail":img}, status=status.HTTP_200_OK)
+            except:
+                return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
