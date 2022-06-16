@@ -267,7 +267,10 @@ class ProjectViewSet(ModelViewSet):
         else:
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'])
+    #@action(detail=True, methods=['delete'])
+# this method was changed to POST so the request 
+# information can be sent in the body of the request
+    @action(detail=True, methods=['post'])
     def delete_project(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():

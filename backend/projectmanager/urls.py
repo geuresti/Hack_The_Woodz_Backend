@@ -6,14 +6,12 @@ urlpatterns = [
     path('projects/', ProjectViewSet.as_view({'get':'projects'})),
     path('create/', ProjectViewSet.as_view({'post':'create'})),
     path('update/', ProjectViewSet.as_view({'post':'update'})),
-    path('delete_project/', ProjectViewSet.as_view({'delete':'delete_project'})),
+    path('delete_project/', ProjectViewSet.as_view({'post':'delete_project'})),
     re_path(r'^view_project/(?:title-(?P<title>\w+)/)?$', ProjectViewSet.as_view({'get':'view_project'})),
     re_path(r'^get_thumbnail/(?:title-(?P<title>\w+)/)?$', ProjectViewSet.as_view({'get':'get_thumbnail'})),
-    #path('get_thumbnail/', ProjectViewSet.as_view({'get':'get_thumbnail'})),
     path('log_in/', CustomAuthToken.as_view()),
     path('log_out/', UserViewSet.as_view({'delete':'log_out'})),
     path('users/', UserViewSet.as_view({'get':'users'})),
     re_path(r'^profile/(?:username-(?P<username>\w+)/)?$', UserViewSet.as_view({'get':'profile'})),
-#    path('profile/', UserViewSet.as_view({'get':'profile'})),
     path('create_account/', UserViewSet.as_view({'post':'create_account'}))
 ]
