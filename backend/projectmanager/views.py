@@ -3,13 +3,14 @@ from rest_framework import status, permissions
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action, permission_classes
 
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
 from .serializers import ProjectSerializer, UserSerializer
 from .models import Project, Person
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
 # This class allows us to add more fields in the response
@@ -148,7 +149,9 @@ class UserViewSet(ModelViewSet):
 
 # unathenticated users may only perform GET requests
 # other request types only be allowed if authenticated
-@permission_classes([IsAuthenticatedOrReadOnly])
+
+#@permission_classes([IsAuthenticatedOrReadOnly])
+@permission_classes([AllowAny]) # auth thru request body
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -192,12 +195,26 @@ class ProjectViewSet(ModelViewSet):
                 return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
     # create a new project
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'])#, permission_classes=[AllowAny])
     def create(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
+
+# Authentication verification thru request body rather than tokens
+#-----------------------------------------------------------------
+            try:
+                username = request.data['username']
+                password = request.data['password']
+                user = authenticate(username=username, password=password)
+                if user == None:
+                    return Response({"error":"incorrect authentication"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({"status":"username or password is missing"}, status=status.HTTP_400_BAD_REQUEST)
+#-----------------------------------------------------------------
+            #project.user = request.user
+
             project = Project()
-            project.user = request.user
+            project.user = user
 
             if serializer.initial_data.get('title'):
                 title_data = serializer.validated_data['title']
@@ -237,6 +254,19 @@ class ProjectViewSet(ModelViewSet):
         serializer = ProjectSerializer(data=request.data, partial=True)
 
         if serializer.is_valid():
+
+    # Authentication verification thru request body rather than tokens
+    #-----------------------------------------------------------------
+            try:
+                username = request.data['username']
+                password = request.data['password']
+                user = authenticate(username=username, password=password)
+                if user == None:
+                    return Response({"error":"incorrect authentication"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({"status":"username or password is missing"}, status=status.HTTP_400_BAD_REQUEST)
+    #-----------------------------------------------------------------
+
             # look for project by title
             if serializer.initial_data.get('title'):
                 title_data = serializer.validated_data['title']
@@ -245,7 +275,7 @@ class ProjectViewSet(ModelViewSet):
                 return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
 
             # check if user sending the request is the owner of the project
-            if project.user == request.user:
+            if project.user == user: #request.user: (Token auth)
 
                 # update anything that's changed been changed in request body
                 if serializer.data.get('contributions'):
@@ -268,21 +298,35 @@ class ProjectViewSet(ModelViewSet):
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
     #@action(detail=True, methods=['delete'])
-# this method was changed to POST so the request 
+# this method was changed to POST so the request
 # information can be sent in the body of the request
     @action(detail=True, methods=['post'])
     def delete_project(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
+
+    # Authentication verification thru request body rather than tokens
+    #-----------------------------------------------------------------
+            try:
+                username = request.data['username']
+                password = request.data['password']
+                user = authenticate(username=username, password=password)
+                if user == None:
+                    return Response({"error":"incorrect authentication"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                    return Response({"status":"username or password is missing"}, status=status.HTTP_400_BAD_REQUEST)
+    #-----------------------------------------------------------------
+
             if serializer.initial_data.get('title'):
                 title_data = serializer.validated_data['title']
                 project = get_object_or_404(Project, title=title_data)
 
-                if request.user == project.user:
-                    project.delete()
-                    return Response({"status":"project successfully deleted"}, status=status.HTTP_200_OK)
-                else:
-                    return Response({"error":"you don't have permission to delete this project"}, status=status.HTTP_401_UNAUTHORIZED)
+                # for Token auth
+            #    if request.user == project.user:
+                project.delete()
+                return Response({"status":"project successfully deleted"}, status=status.HTTP_200_OK)
+            #    else:
+            #        return Response({"error":"you don't have permission to delete this project"}, status=status.HTTP_401_UNAUTHORIZED)
             else:
                 return Response({"error":"project not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
