@@ -6,12 +6,27 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework import renderers #
 
 from .serializers import ProjectSerializer, UserSerializer
 from .models import Project, Person
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
+
+from wsgiref.util import FileWrapper #
+
+"""
+class JPEGRenderer(renderers.BaseRenderer):
+
+    media_type = 'image/jpeg'
+    format = 'jpg'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+"""
 
 # This class allows us to add more fields in the response
 # when a user logs in. By default, only the token is returned
@@ -153,6 +168,8 @@ class UserViewSet(ModelViewSet):
 #@permission_classes([IsAuthenticatedOrReadOnly])
 @permission_classes([AllowAny]) # auth thru request body
 class ProjectViewSet(ModelViewSet):
+    #renderer_classes = [JPEGRenderer] ###############################
+
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
@@ -344,7 +361,8 @@ class ProjectViewSet(ModelViewSet):
                 title = parameters['title']
                 project = get_object_or_404(Project, title=title)
                 img = "/media/" + str(project.thumbnail)
-
+            #    print("\n", img, "\n")
                 return Response({"thumbnail":img}, status=status.HTTP_200_OK)
+        #        return Response(FileWrapper(img.open()))
             except:
                 return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)

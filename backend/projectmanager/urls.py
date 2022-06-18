@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 from .views import CustomAuthToken, ProjectViewSet, UserViewSet
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('delete_all_projects/', ProjectViewSet.as_view({'delete':'delete_all_projects'})),
@@ -13,5 +14,5 @@ urlpatterns = [
     path('log_out/', UserViewSet.as_view({'delete':'log_out'})),
     path('users/', UserViewSet.as_view({'get':'users'})),
     re_path(r'^profile/(?:username-(?P<username>\w+)/)?$', UserViewSet.as_view({'get':'profile'})),
-    path('create_account/', UserViewSet.as_view({'post':'create_account'}))
+    path('create_account/', UserViewSet.as_view({'post':'create_account'})),
 ]
