@@ -6,7 +6,6 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework import renderers #
 
 from .serializers import ProjectSerializer, UserSerializer
 from .models import Project, Person
@@ -14,19 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
-from wsgiref.util import FileWrapper #
-
-"""
-class JPEGRenderer(renderers.BaseRenderer):
-
-    media_type = 'image/jpeg'
-    format = 'jpg'
-    charset = None
-    render_style = 'binary'
-
-    def render(self, data, accepted_media_type=None, renderer_context=None):
-        return data
-"""
+from django.http import HttpResponseRedirect
 
 # This class allows us to add more fields in the response
 # when a user logs in. By default, only the token is returned
@@ -64,6 +51,9 @@ class UserViewSet(ModelViewSet):
         display = []
 
         for user in users:
+
+            if user.is_superuser:
+                continue
 
             job_title = user.person.job_title
 
@@ -150,7 +140,7 @@ class UserViewSet(ModelViewSet):
                 for project in projects:
                     project_info = {
                         "id": project.id,
-                        "thumbnail": str(project.thumbnail),
+                        "thumbnail": "/media/" + str(project.thumbnail),
                         "title": project.title,
                         "short_description": project.short_description
                     }
@@ -168,19 +158,61 @@ class UserViewSet(ModelViewSet):
 #@permission_classes([IsAuthenticatedOrReadOnly])
 @permission_classes([AllowAny]) # auth thru request body
 class ProjectViewSet(ModelViewSet):
-    #renderer_classes = [JPEGRenderer] ###############################
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
-    # This is for testing only.
-    # DELETE THIS BEFORE PROJECT GOES LIVE
     @action(detail=False, methods=['delete'])
     def delete_all_projects(self, request):
+
+        # Authentication verification thru request body rather than tokens
+        #-----------------------------------------------------------------
+        try:
+            username = request.data['username']
+            password = request.data['password']
+            user = authenticate(username=username, password=password)
+            if user == None:
+                return Response({"error":"incorrect authentication"}, status=status.HTTP_400_BAD_REQUEST)
+            elif user.is_superuser == False:
+                return Response({"error":"you do not have permission to perform this action"}, status=status.HTTP_401_UNAUTHORIZED)
+        except:
+            return Response({"status":"username or password is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        #-----------------------------------------------------------------
         projects = Project.objects.all()
+
         for project in projects:
             project.delete()
+
         return Response({"status":"all projects deleted"}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'])
+    def flush_database(self, request):
+
+        # Authentication verification thru request body rather than tokens
+        #-----------------------------------------------------------------
+        try:
+            username = request.data['username']
+            password = request.data['password']
+            user = authenticate(username=username, password=password)
+            if user == None:
+                return Response({"error":"incorrect authentication"}, status=status.HTTP_400_BAD_REQUEST)
+            elif user.is_superuser == False:
+                return Response({"error":"you do not have permission to perform this action"}, status=status.HTTP_401_UNAUTHORIZED)
+        except:
+            return Response({"status":"username or password is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        #-----------------------------------------------------------------
+
+        users = User.objects.all()
+        projects = Project.objects.all()
+
+        for project in projects:
+            project.delete()
+
+        for user in users:
+            if user.is_superuser == False:
+                user.delete()
+
+        return Response({"status":"successfully flushed database"}, status=status.HTTP_200_OK)
 
     # display all projects in database (for testing)
     @action(detail=False, methods=['get'])
@@ -349,6 +381,8 @@ class ProjectViewSet(ModelViewSet):
         else:
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# returns a link to the path of the actual image.......
     @action(detail=False, methods=['get'])
     def get_thumbnail(self, request):
         parameters = request.GET
@@ -361,8 +395,7 @@ class ProjectViewSet(ModelViewSet):
                 title = parameters['title']
                 project = get_object_or_404(Project, title=title)
                 img = "/media/" + str(project.thumbnail)
-            #    print("\n", img, "\n")
-                return Response({"thumbnail":img}, status=status.HTTP_200_OK)
-        #        return Response(FileWrapper(img.open()))
+        #        return Response({"thumbnail":img}, status=status.HTTP_200_OK)
+                return HttpResponseRedirect(img)
             except:
                 return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)

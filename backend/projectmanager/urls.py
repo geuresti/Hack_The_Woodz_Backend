@@ -1,9 +1,9 @@
 from django.urls import path, re_path
 from .views import CustomAuthToken, ProjectViewSet, UserViewSet
-from django.conf.urls.static import static
 
 urlpatterns = [
     path('delete_all_projects/', ProjectViewSet.as_view({'delete':'delete_all_projects'})),
+    path('flush_database/', ProjectViewSet.as_view({'delete':'flush_database'})),
     path('projects/', ProjectViewSet.as_view({'get':'projects'})),
     path('create/', ProjectViewSet.as_view({'post':'create'})),
     path('update/', ProjectViewSet.as_view({'post':'update'})),
