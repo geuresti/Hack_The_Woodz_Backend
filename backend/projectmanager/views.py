@@ -382,7 +382,7 @@ class ProjectViewSet(ModelViewSet):
             return Response({"error":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# returns a link to the path of the actual image.......
+# returns a link to the path
     @action(detail=False, methods=['get'])
     def get_thumbnail(self, request):
         parameters = request.GET
@@ -395,7 +395,7 @@ class ProjectViewSet(ModelViewSet):
                 title = parameters['title']
                 project = get_object_or_404(Project, title=title)
                 img = "/media/" + str(project.thumbnail)
-        #        return Response({"thumbnail":img}, status=status.HTTP_200_OK)
-                return HttpResponseRedirect(img)
+                return Response({"thumbnail":img}, status=status.HTTP_200_OK)
+        #        return HttpResponseRedirect(img)
             except:
                 return Response({"status":"bad request"}, status=status.HTTP_400_BAD_REQUEST)
