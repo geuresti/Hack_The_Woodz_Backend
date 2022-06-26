@@ -1,5 +1,6 @@
 from pathlib import Path
 import django_on_heroku
+from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -93,6 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Secret Key moved to local .env file
+SECRET_KEY = config("SECRET_KEY")
 
 LANGUAGE_CODE = 'en-us'
 
