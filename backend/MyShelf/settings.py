@@ -92,6 +92,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Secret Key moved to local .env file
 
 LANGUAGE_CODE = 'en-us'
 
