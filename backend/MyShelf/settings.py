@@ -1,4 +1,5 @@
 from pathlib import Path
+import django_on_heroku
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -7,10 +8,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-####
-#STATIC_ROOT = MEDIA_ROOT
-####
-
 CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_WHITELIST = (
 #   'http://....',
@@ -18,10 +15,10 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # frags image serving on False
 #   requires an external service...?
-DEBUG = True
+DEBUG = True #False
 
 # ".heroku.com" will allow for www.heroku.com and heroku.com
-ALLOWED_HOSTS = ["127.0.0.1"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0"]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -95,7 +92,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SECRET_KEY = 'django-insecure-(xq_l&y&^%ktsjo1a62ax@(q75drcbcalwy_qpswlv76+vkx8z'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -108,3 +104,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+django_on_heroku.settings(locals()) #, allowed_hosts=False)
