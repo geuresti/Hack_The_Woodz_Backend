@@ -1,2 +1,0 @@
-web: gunicorn MyShelf.wsgi
-
