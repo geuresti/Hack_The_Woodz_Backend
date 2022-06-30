@@ -248,7 +248,6 @@ class ProjectViewSet(ModelViewSet):
     def create(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
-
 # Authentication verification thru request body rather than tokens
 #-----------------------------------------------------------------
             try:
@@ -279,21 +278,21 @@ class ProjectViewSet(ModelViewSet):
             req_contributions = serializer.validated_data.get('contributions')
             req_long_desc = serializer.validated_data.get('long_description')
             req_short_desc = serializer.validated_data.get('short_description')
-            req_thumbnail = serializer.validated_data.get('thumbnail')
+        #    req_thumbnail = serializer.validated_data.get('thumbnail')
 
             # if the request had all four fields filled out, create
             # the new project using the data from the request
-            if req_title and req_contributions and req_long_desc and req_short_desc and req_thumbnail:
+            if req_title and req_contributions and req_long_desc and req_short_desc: # and req_thumbnail:
                 project.title = serializer.validated_data['title']
                 project.contributions = serializer.validated_data['contributions']
                 project.long_description = serializer.validated_data['long_description']
                 project.short_description = serializer.validated_data['short_description']
-                project.thumbnail = serializer.validated_data['thumbnail']
+                project.thumbnail = 'placeholder' #serializer.validated_data['thumbnail']
 
                 project.save()
                 return Response({"status":"successfully created project"}, status=status.HTTP_201_CREATED)
             else:
-                return Response({"error":"required fields missing"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error":"required field(s) missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
