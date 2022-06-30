@@ -1,25 +1,17 @@
 from pathlib import Path
-import django_on_heroku
 from decouple import config
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = (
-#   'http://....',
-#)
 
-# frags image serving on False
-#   requires an external service...?
-DEBUG = True #False
+DEBUG = False
 
-# ".heroku.com" will allow for www.heroku.com and heroku.com
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = ["127.0.0.1", "0.0.0.0", "euresti-myshelf.herokuapp.com"]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -73,8 +65,12 @@ WSGI_APPLICATION = 'MyShelf.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dkrc84mob5bdk',
+        'HOST': 'ec2-23-23-151-191.compute-1.amazonaws.com',
+        'PORT': 5432,
+        'USER': 'ikkpikgkmswgrj',
+        'PASSWORD': 'b7ce6056b932c8d79f7c57d235672b3a673f428f162c901c4bf0905bb698e09f'
     }
 }
 
@@ -105,7 +101,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-django_on_heroku.settings(locals()) #, allowed_hosts=False)
